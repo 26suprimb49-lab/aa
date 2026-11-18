@@ -1,0 +1,906 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketFlow - Stock Market Dashboard</title>
+
+<style>
+:root {
+  --bg: #080d18;
+  --panel: #111a2a;
+  --border: #25334a;
+  --text: #f5f7fb;
+  --muted: #8c9ab0;
+  --green: #16c784;
+  --red: #ea3943;
+  --blue: #3985ff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+button, input {
+  font: inherit;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+
+.sidebar {
+  background: #0d1524;
+  padding: 28px 18px;
+  border-right: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: 800;
+  margin-bottom: 45px;
+}
+
+.logo span {
+  color: var(--green);
+}
+
+.nav-title {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 20px 10px 12px;
+  letter-spacing: 1px;
+}
+
+.nav-links {
+  list-style: none;
+}
+
+.nav-links li {
+  margin-bottom: 8px;
+}
+
+.nav-links a {
+  display: block;
+  color: var(--muted);
+  padding: 13px;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #1c2a40;
+  color: white;
+}
+
+.sidebar-bottom {
+  margin-top: 100px;
+  padding: 18px;
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.sidebar-bottom p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+/* Main */
+
+main {
+  padding: 28px;
+  min-width: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 27px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 7px;
+}
+
+.search {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 13px;
+  color: white;
+  border-radius: 9px;
+  width: 230px;
+  outline: none;
+}
+
+.search:focus {
+  border-color: var(--blue);
+}
+
+.status {
+  color: var(--green);
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+/* Market cards */
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 20px;
+}
+
+.card-title {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.price {
+  font-size: 26px;
+  font-weight: bold;
+  margin: 13px 0 8px;
+}
+
+.positive {
+  color: var(--green);
+}
+
+.negative {
+  color: var(--red);
+}
+
+/* Dashboard */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  gap: 10px;
+}
+
+.card-heading h2 {
+  font-size: 17px;
+}
+
+.chart-price {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.chart-container {
+  height: 250px;
+  width: 100%;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.chart-buttons button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 7px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.chart-buttons button.active {
+  background: #263955;
+  color: white;
+}
+
+/* Watchlist */
+
+.watch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.watch-item:last-child {
+  border: none;
+}
+
+.stock-icon {
+  background: #263955;
+  width: 37px;
+  height: 37px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.stock-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.stock-name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.stock-company {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.stock-right {
+  text-align: right;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.stock-right small {
+  display: block;
+  margin-top: 5px;
+}
+
+/* Stock table */
+
+.table-card {
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 15px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 16px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:hover {
+  background: #19263a;
+  cursor: pointer;
+}
+
+.symbol {
+  font-weight: bold;
+}
+
+.company {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.badge {
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.up {
+  background: #123c30;
+  color: var(--green);
+}
+
+.down {
+  background: #421e27;
+  color: var(--red);
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 25px;
+}
+
+@media(max-width: 1000px) {
+  .market-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding: 15px;
+  }
+
+  .logo {
+    margin-bottom: 0;
+  }
+
+  .sidebar nav,
+  .sidebar-bottom {
+    display: none;
+  }
+
+  main {
+    padding: 18px 12px;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .market-grid {
+    gap: 10px;
+  }
+
+  .price {
+    font-size: 20px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .chart-container {
+    height: 200px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+  <div class="logo">Market<span>Flow</span>.</div>
+
+  <nav aria-label="Main navigation">
+    <p class="nav-title">MENU</p>
+
+    <ul class="nav-links">
+      <li><a href="#" class="active">▦ Dashboard</a></li>
+      <li><a href="#markets">▤ Markets</a></li>
+      <li><a href="#watchlist">☆ Watchlist</a></li>
+      <li><a href="#stocks">▥ Stocks</a></li>
+    </ul>
+  </nav>
+
+  <section class="sidebar-bottom">
+    <h3>Market Insights</h3>
+    <p>Track your favorite stocks and monitor market movements.</p>
+    <button onclick="refreshMarket()" style="background:#16c784;border:0;padding:10px;border-radius:6px;width:100%;font-weight:bold;cursor:pointer">
+      Refresh Market
+    </button>
+  </section>
+
+</aside>
+
+<main>
+
+<header>
+  <section>
+    <h1>Market Overview</h1>
+    <p class="subtitle" id="date"></p>
+  </section>
+
+  <section>
+    <input
+      type="search"
+      class="search"
+      id="search"
+      placeholder="Search stocks..."
+      aria-label="Search stocks"
+    >
+    <p class="status" id="status">● Demo market data</p>
+  </section>
+</header>
+
+<!-- Market indices -->
+
+<section class="market-grid" id="markets">
+
+  <article class="card">
+    <p class="card-title">S&P 500</p>
+    <h2 class="price" id="sp500">5,900.25</h2>
+    <p class="positive">▲ 1.25%</p>
+  </article>
+
+  <article class="card">
+    <p class="card-title">NASDAQ</p>
+    <h2 class="price" id="nasdaq">19,045.80</h2>
+    <p class="positive">▲ 0.85%</p>
+  </article>
+
+  <article class="card">
+    <p class="card-title">DOW JONES</p>
+    <h2 class="price" id="dow">43,025.60</h2>
+    <p class="positive">▲ 0.42%</p>
+  </article>
+
+  <article class="card">
+    <p class="card-title">RUSSELL 2000</p>
+    <h2 class="price" id="russell">2,205.40</h2>
+    <p class="negative">▼ 0.18%</p>
+  </article>
+
+</section>
+
+<!-- Chart and watchlist -->
+
+<section class="dashboard-grid">
+
+  <article class="card">
+
+    <div class="card-heading">
+      <div>
+        <h2>Stock Performance</h2>
+        <p class="subtitle">Price history</p>
+      </div>
+
+      <div class="chart-buttons">
+        <button class="active" data-period="1D">1D</button>
+        <button data-period="1W">1W</button>
+        <button data-period="1M">1M</button>
+        <button data-period="1Y">1Y</button>
+      </div>
+    </div>
+
+    <h2 class="chart-price" id="chartPrice">$225.50</h2>
+    <p class="positive" id="chartChange">+1.12% today</p>
+
+    <div class="chart-container">
+      <canvas id="chart" aria-label="Stock performance chart"></canvas>
+    </div>
+
+  </article>
+
+  <article class="card" id="watchlist">
+
+    <div class="card-heading">
+      <h2>My Watchlist</h2>
+      <span class="subtitle">Top stocks</span>
+    </div>
+
+    <section id="watchItems" aria-live="polite"></section>
+
+  </article>
+
+</section>
+
+<!-- Stock table -->
+
+<section class="card table-card" id="stocks">
+
+  <div class="card-heading">
+    <div>
+      <h2>Popular Stocks</h2>
+      <p class="subtitle">Stock market performance</p>
+    </div>
+    <span class="subtitle" id="updated">--</span>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+
+      <thead>
+        <tr>
+          <th>STOCK</th>
+          <th>PRICE</th>
+          <th>CHANGE</th>
+          <th>CHANGE %</th>
+          <th>MARKET</th>
+        </tr>
+      </thead>
+
+      <tbody id="stockTable"></tbody>
+
+    </table>
+  </div>
+
+</section>
+
+<footer>
+  MarketFlow © 2026 | Stock information for educational purposes.
+  Demo prices are simulated and are not live exchange quotes.
+</footer>
+
+</main>
+</div>
+
+<script>
+
+// STOCK DATA - DEMONSTRATION ONLY
+
+let stocks = [
+  {symbol:"AAPL",name:"Apple Inc.",price:225.50,change:2.50,percent:1.12,market:"NASDAQ"},
+  {symbol:"MSFT",name:"Microsoft",price:425.20,change:-1.80,percent:-0.42,market:"NASDAQ"},
+  {symbol:"NVDA",name:"NVIDIA Corp.",price:138.85,change:4.25,percent:3.16,market:"NASDAQ"},
+  {symbol:"TSLA",name:"Tesla Inc.",price:345.80,change:-5.20,percent:-1.48,market:"NASDAQ"},
+  {symbol:"AMZN",name:"Amazon.com",price:220.30,change:1.20,percent:0.55,market:"NASDAQ"},
+  {symbol:"META",name:"Meta Platforms",price:595.60,change:3.10,percent:0.52,market:"NASDAQ"},
+  {symbol:"GOOGL",name:"Alphabet Inc.",price:175.40,change:0.80,percent:0.46,market:"NASDAQ"}
+];
+
+let selected = "AAPL";
+
+const money = n => "$" + n.toFixed(2);
+
+document.getElementById("date").textContent =
+  new Date().toLocaleDateString("en-US",{
+    weekday:"long",
+    year:"numeric",
+    month:"long",
+    day:"numeric"
+  });
+
+// RENDER WATCHLIST
+
+function renderWatchlist(){
+
+  const container = document.getElementById("watchItems");
+
+  container.innerHTML = stocks.slice(0,5).map(s => `
+
+    <article class="watch-item">
+
+      <div class="stock-left">
+
+        <span class="stock-icon">${s.symbol.slice(0,2)}</span>
+
+        <div>
+          <p class="stock-name">${s.symbol}</p>
+          <p class="stock-company">${s.name}</p>
+        </div>
+
+      </div>
+
+      <div class="stock-right">
+
+        ${money(s.price)}
+
+        <small class="${s.change >= 0 ? 'positive':'negative'}">
+          ${s.change >= 0 ? '+':''}${s.percent.toFixed(2)}%
+        </small>
+
+      </div>
+
+    </article>
+
+  `).join("");
+}
+
+// RENDER STOCK TABLE
+
+function renderTable(filter=""){
+
+  const filtered = stocks.filter(s =>
+    s.symbol.toLowerCase().includes(filter.toLowerCase()) ||
+    s.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  const table = document.getElementById("stockTable");
+
+  if(!filtered.length){
+    table.innerHTML = '<tr><td colspan="5">No stocks found.</td></tr>';
+    return;
+  }
+
+  table.innerHTML = filtered.map(s => `
+
+    <tr data-symbol="${s.symbol}">
+
+      <td>
+        <p class="symbol">${s.symbol}</p>
+        <p class="company">${s.name}</p>
+      </td>
+
+      <td>${money(s.price)}</td>
+
+      <td class="${s.change >= 0 ? 'positive':'negative'}">
+        ${s.change >= 0 ? '+':''}${money(s.change)}
+      </td>
+
+      <td>
+        <span class="badge ${s.change >= 0 ? 'up':'down'}">
+          ${s.change >= 0 ? '+':''}${s.percent.toFixed(2)}%
+        </span>
+      </td>
+
+      <td>${s.market}</td>
+
+    </tr>
+
+  `).join("");
+
+  table.querySelectorAll("tr[data-symbol]").forEach(row => {
+    row.addEventListener("click", () => selectStock(row.dataset.symbol));
+  });
+}
+
+// SELECT STOCK
+
+function selectStock(symbol){
+
+  const stock = stocks.find(s => s.symbol === symbol);
+
+  if(!stock) return;
+
+  selected = symbol;
+
+  document.getElementById("chartPrice").textContent = money(stock.price);
+
+  const change = document.getElementById("chartChange");
+
+  change.textContent =
+    `${stock.change >= 0 ? '+' : ''}${stock.percent.toFixed(2)}% today`;
+
+  change.className = stock.change >= 0 ? "positive" : "negative";
+
+  drawChart();
+}
+
+// DRAW STOCK CHART
+
+function drawChart(){
+
+  const canvas = document.getElementById("chart");
+  const rect = canvas.getBoundingClientRect();
+
+  if(!rect.width || !rect.height) return;
+
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.scale(dpr,dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+
+  const stock = stocks.find(s => s.symbol === selected);
+
+  if(!stock) return;
+
+  const seed = stock.symbol.split("").reduce(
+    (sum,c) => sum + c.charCodeAt(0),0
+  );
+
+  const values = [];
+
+  for(let i=0;i<65;i++){
+
+    const wave = Math.sin(i*.24 + seed)*2.5;
+    const noise = Math.cos(i*.48 + seed)*1.5;
+
+    values.push(stock.price + wave + noise + i*.035);
+  }
+
+  const min = Math.min(...values)-2;
+  const max = Math.max(...values)+2;
+
+  const coords = values.map((v,i)=>({
+    x: i/64*w,
+    y: h-(v-min)/(max-min)*h
+  }));
+
+  ctx.clearRect(0,0,w,h);
+
+  // Grid
+
+  ctx.strokeStyle = "#25334a";
+  ctx.lineWidth = 1;
+
+  for(let i=1;i<5;i++){
+    ctx.beginPath();
+    ctx.moveTo(0,i*h/5);
+    ctx.lineTo(w,i*h/5);
+    ctx.stroke();
+  }
+
+  const color = stock.change >= 0 ? "#16c784":"#ea3943";
+
+  // Gradient
+
+  const gradient = ctx.createLinearGradient(0,0,0,h);
+
+  gradient.addColorStop(0,color+"55");
+  gradient.addColorStop(1,color+"00");
+
+  ctx.beginPath();
+
+  coords.forEach((p,i)=>{
+    if(i===0) ctx.moveTo(p.x,p.y);
+    else ctx.lineTo(p.x,p.y);
+  });
+
+  ctx.lineTo(w,h);
+  ctx.lineTo(0,h);
+  ctx.closePath();
+
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Line
+
+  ctx.beginPath();
+
+  coords.forEach((p,i)=>{
+    if(i===0) ctx.moveTo(p.x,p.y);
+    else ctx.lineTo(p.x,p.y);
+  });
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Last point
+
+  const last = coords[coords.length-1];
+
+  ctx.beginPath();
+  ctx.arc(last.x,last.y,4,0,Math.PI*2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// SIMULATED MARKET REFRESH
+
+function refreshMarket(){
+
+  stocks = stocks.map(s=>{
+
+    const movement = (Math.random()-.48)*.5;
+
+    const price = Math.max(0.01,s.price+movement);
+
+    return {
+      ...s,
+      price,
+      change:s.change+movement,
+      percent:s.percent+movement/s.price*100
+    };
+
+  });
+
+  // Simulated index movements
+
+  ["sp500","nasdaq","dow","russell"].forEach(id=>{
+
+    const el = document.getElementById(id);
+
+    const current = Number(el.textContent.replace(/,/g,""));
+
+    el.textContent = (current+(Math.random()-.48)*3)
+      .toLocaleString("en-US",{maximumFractionDigits:2});
+
+  });
+
+  renderWatchlist();
+  renderTable(document.getElementById("search").value);
+  selectStock(selected);
+
+  document.getElementById("updated").textContent =
+    "Updated " + new Date().toLocaleTimeString();
+
+}
+
+// SEARCH
+
+document.getElementById("search").addEventListener("input",e=>{
+  renderTable(e.target.value);
+});
+
+// CHART PERIOD BUTTONS
+
+document.querySelectorAll(".chart-buttons button").forEach(button=>{
+
+  button.addEventListener("click",()=>{
+
+    document.querySelectorAll(".chart-buttons button")
+      .forEach(b=>b.classList.remove("active"));
+
+    button.classList.add("active");
+
+    drawChart();
+
+  });
+
+});
+
+// START WEBSITE
+
+renderWatchlist();
+renderTable();
+selectStock("AAPL");
+
+refreshMarket();
+
+// Update demonstration every 5 seconds
+
+setInterval(refreshMarket,5000);
+
+window.addEventListener("resize",drawChart);
+
+</script>
+
+</body>
+</html>
